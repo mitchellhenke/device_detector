@@ -16,7 +16,8 @@ class DeviceDetector
       'portable media player',
       'phablet',
       'smart speaker',
-      'wearable'
+      'wearable',
+      'peripheral'
     ].freeze
 
     def known?
@@ -28,7 +29,13 @@ class DeviceDetector
     end
 
     def type
-      hbbtv? ? 'tv' : regex_meta[:device]
+      if hbbtv?
+        'tv'
+      elsif shell_tv?
+        'tv'
+      else
+        regex_meta[:device]
+      end
     end
 
     def brand
@@ -42,6 +49,7 @@ class DeviceDetector
     def filenames
       [
         'device/televisions.yml',
+        'device/shell_tv.yml',
         'device/consoles.yml',
         'device/car_browsers.yml',
         'device/cameras.yml',
@@ -53,7 +61,14 @@ class DeviceDetector
 
     def matching_regex
       from_cache([self.class.name, user_agent]) do
-        regex_list = hbbtv? ? regexes_for_hbbtv : regexes_other
+        regex_list =
+          if hbbtv?
+            regexes_for_hbbtv
+          elsif shell_tv?
+            regexes_for_shell_tv
+          else
+            regexes_other
+          end
         regex = regex_find(user_agent, regex_list)
         if regex && regex[:models]
           model_regex = regex[:models].find { |m| user_agent =~ m[:regex] }
@@ -93,8 +108,17 @@ class DeviceDetector
       user_agent =~ @regex_hbbtv
     end
 
+    def shell_tv?
+      @shell_hbbtv ||= build_regex('[a-z]+[ _]Shell[ _]\w{6}')
+      user_agent =~ @shell_hbbtv
+    end
+
     def regexes_for_hbbtv
       regexes.select { |r| r[:path] == :'device/televisions.yml' }
+    end
+
+    def regexes_for_shell_tv
+      regexes.select { |r| r[:path] == :'device/shell_tv.yml' }
     end
 
     def regexes_other
@@ -103,6 +127,7 @@ class DeviceDetector
 
     def parse_regexes(path, raw_regexes)
       raw_regexes.map do |brand, meta|
+        meta[:regex] = meta['regex'] if meta['regex'] && !meta[:regex]
         raise "invalid device spec: #{meta.inspect}" unless meta[:regex].is_a? String
 
         meta[:regex] = build_regex(meta[:regex])

@@ -14,7 +14,7 @@ class DeviceDetector
     private
 
     def metadata_string
-      String(regex_meta[:model])
+      String(regex_meta[:model] || regex_meta['model'])
     end
 
     def regex

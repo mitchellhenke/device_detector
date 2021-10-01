@@ -21,7 +21,9 @@ class DeviceDetector
 
     def full_version
       from_cache(['full_version', self.class.name, user_agent]) do
-        VersionExtractor.new(user_agent, regex_meta).call
+        version = VersionExtractor.new(user_agent, regex_meta).call
+        version.chomp!('.') if version
+        version
       end
     end
 

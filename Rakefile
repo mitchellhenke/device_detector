@@ -62,20 +62,20 @@ end
 desc 'update regex database from piwik project'
 task :update_regexes do
   top = File.expand_path(__dir__)
-  get_latest_piwik_checkout
+  # get_latest_piwik_checkout
   system "cp -R #{PIWIK_CHECKOUT_LOCATION}/regexes/* #{top}/regexes"
 end
 
 desc 'update fixtures from piwik project'
 task :update_fixtures do
   top = File.expand_path(__dir__)
-  get_latest_piwik_checkout
+  # get_latest_piwik_checkout
 
   fixture_mappings = [
     { target_path: "#{top}/spec/fixtures/detector", source_path: 'Tests/fixtures/*.yml' },
     { target_path: "#{top}/spec/fixtures/client", source_path: 'Tests/Parser/Client/fixtures/*.yml' },
     { target_path: "#{top}/spec/fixtures/parser", source_path: 'Tests/Parser/fixtures/*.yml' },
-    { target_path: "#{top}/spec/fixtures/device", source_path: 'Tests/Parser/Devices/fixtures/*.yml' }
+    { target_path: "#{top}/spec/fixtures/device", source_path: 'Tests/Parser/Device/fixtures/*.yml' }
   ]
 
   fixture_mappings.each do |mapping|

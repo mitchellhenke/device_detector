@@ -105,7 +105,7 @@ describe DeviceDetector do
     end
 
     it 'recognizes the device name' do
-      value(client.device_name).must_equal "GALAXY S5"
+      value(client.device_name).must_equal "Galaxy S5"
     end
 
     it 'recognizes the device type' do

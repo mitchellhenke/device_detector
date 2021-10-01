@@ -59,7 +59,7 @@ class DeviceDetector
     # that won't have a detected browser, but can still be detected. So we check the useragent for
     # Chrome instead.
     if t.nil? && os.family == 'Android' && user_agent =~ build_regex('Chrome\/[\.0-9]*')
-      if user_agent =~ build_regex('Chrome\/[\.0-9]* Mobile')
+      if user_agent =~ build_regex('Chrome\/[\.0-9]* (?:Mobile|eliboM)')
         t = 'smartphone'
       elsif user_agent =~ build_regex('Chrome\/[\.0-9]* (?!Mobile)')
         t = 'tablet'
@@ -79,9 +79,9 @@ class DeviceDetector
     # smartphones Devices running Android 3.X are tablets. Device type
     # of Android 2.X and 4.X+ are unknown
     if t.nil? && os.short_name == 'AND' && os.full_version && !os.full_version.empty?
-      if os.full_version < '2'
+      if Gem::Version.new(os.full_version) < Gem::Version.new('2.0')
         t = 'smartphone'
-      elsif os.full_version >= '3' && os.full_version < '4'
+      elsif Gem::Version.new(os.full_version) >= Gem::Version.new('3.0') && Gem::Version.new(os.full_version) < Gem::Version.new('4.0')
         t = 'tablet'
       end
     end
@@ -97,13 +97,15 @@ class DeviceDetector
     # As most touch enabled devices are tablets and only a smaller part are desktops/notebooks we
     # assume that all Windows 8 touch devices are tablets.
     if t.nil? && touch_enabled? &&
-       (os.short_name == 'WRT' || (os.short_name == 'WIN' && os.full_version && os.full_version >= '8'))
+        (os.short_name == 'WRT' || (os.short_name == 'WIN' && os.full_version && Gem::Version.new(os.full_version) >= Gem::Version.new('8.0')))
       t = 'tablet'
     end
 
     t = 'tv' if opera_tv_store?
 
+    t = 'tv' if t.nil? && user_agent =~ build_regex('SmartTV|Tizen.+ TV .+$')
     t = 'tv' if t.nil? && ['Kylo', 'Espial TV Browser'].include?(client.name)
+    t = 'desktop' if has_desktop_fragment?
 
     # set device type to desktop for all devices running a desktop os that were
     # not detected as an other device type
@@ -168,11 +170,15 @@ class DeviceDetector
   end
 
   def android_tablet_fragment?
-    user_agent =~ build_regex('Android(?: \d.\d(?:.\d)?)?; Tablet;')
+    user_agent =~ build_regex('Android( [\.0-9]+)?; Tablet;')
+  end
+
+  def has_desktop_fragment?
+    user_agent =~ build_regex('Desktop (x(?:32|64)|WOW64);')
   end
 
   def android_mobile_fragment?
-    user_agent =~ build_regex('Android(?: \d.\d(?:.\d)?)?; Mobile;')
+    user_agent =~ build_regex('Android( [\.0-9]+)?; Mobile;')
   end
 
   def touch_enabled?
